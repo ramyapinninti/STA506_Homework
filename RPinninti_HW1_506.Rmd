@@ -1,0 +1,373 @@
+---
+title: "Assignment 1: Estimating CDF and PDF"
+author: "Ramya Pinninti"
+date: " Due: February 3, 2026"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: no
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: yes
+    theme: lumen
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    number_sections: yes
+    fig_width: 3
+    fig_height: 3
+  word_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    keep_md: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{css, echo = FALSE}
+#TOC::before {
+  content: "Table of Contents";
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  color: navy;
+  margin-bottom: 10px;
+}
+
+
+div#TOC li {     /* table of content  */
+    list-style:upper-roman;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+}
+
+h1.title {    /* level 1 header of title  */
+  font-size: 22px;
+  font-weight: bold;
+  color: DarkRed;
+  text-align: center;
+  font-family: "Gill Sans", sans-serif;
+}
+
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 15px;
+  font-weight: bold;
+  font-family: system-ui;
+  color: navy;
+  text-align: center;
+}
+
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  font-weight: bold;
+  font-family: "Gill Sans", sans-serif;
+  color: DarkBlue;
+  text-align: center;
+}
+
+h1 { /* Header 1 - and the author and data headers use this too  */
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: center;
+}
+
+h2 { /* Header 2 - and the author and data headers use this too  */
+    font-size: 18px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { /* Header 3 - and the author and data headers use this too  */
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h4 { /* Header 4 - and the author and data headers use this too  */
+    font-size: 14px;
+  font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+/* Add dots after numbered headers */
+.header-section-number::after {
+  content: ".";
+
+body { background-color:white; }
+
+.highlightme { background-color:yellow; }
+
+p { background-color:white; }
+
+}
+```
+
+```{r setup, include=FALSE}
+# code chunk specifies whether the R code, warnings, and output 
+# will be included in the output files.
+if (!require("knitr")) {
+   install.packages("knitr")
+   library(knitr)
+}
+if (!require("pander")) {
+   install.packages("pander")
+   library(pander)
+}
+if (!require("ggplot2")) {
+  install.packages("ggplot2")
+  library(ggplot2)
+}
+if (!require("tidyverse")) {
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+if (!require("plotly")) {
+  install.packages("plotly")
+  library(plotly)
+}
+####
+knitr::opts_chunk$set(echo = TRUE,       # include code chunk in the output file
+                      warning = FALSE,   # sometimes, you code may produce warning messages,
+                                         # you can choose to include the warning messages in
+                                         # the output file. 
+                      results = TRUE,    # you can also decide whether to include the output
+                                         # in the output file.
+                      message = FALSE,
+                      comment = NA
+                      )  
+```
+ 
+ \
+ 
+## **Assignment Objectives** 
+
+* Develop a clear technical understanding of nonparametric cumulative distribution function (CDF) estimation and various kernel density estimators.
+
+* Translate mathematical formulas into R functions and apply them to solve related problems.
+
+* Create effective visualizations to demonstrate your understanding of key concepts in the following questions.
+
+
+
+\
+
+## **Question 1: Cumulative Distribution Function (CDF) Estimation**
+
+The following failure times (in hours) were observed for 8 electronic components:
+
+<center> 23, 45, 67, 89, 112, 156, 189, 245  </center>
+
+a) Write an R function implementing the ECDF $\hat{F}_n(t)$ according to its mathematical definition. Validate your implementation using R's ecdf() function on the given data, with comparison based on their step functions.
+
+```{r} 
+# Create a vector to store the 8 failure times/observations
+failure_times <- c(23, 45, 67, 89, 112, 156, 189, 245)
+
+# Simplified R function
+my_ecdf <- function(data, t) {
+  n <- length(data)
+  results <- numeric(length(t)) # Create an empty vector to store answers
+  
+  for (i in 1:length(t)) {
+    # Count how many data points are less than or equal to current t[i]
+    count <- sum(data <= t[i])
+    
+    # Divide by total number of points and find cumulative probability
+    results[i] <- count / n
+  }
+  
+  return(results)
+}
+# Create a sequence of time values to test
+test_vals <- seq(0, 250, by = 10)
+
+# 1. Run custom function
+my_results <- my_ecdf(failure_times, test_vals)
+
+# 2. Run R's built-in ecdf function and use it directly on the observation data set (8 failure times)
+r_builtin_func <- ecdf(failure_times)
+r_results <- r_builtin_func(test_vals) #use the same 26 test values to find heights on ecdf through built in R function
+
+# 3. Conduct a comparison of the results from both methods. 
+comparison <- data.frame(
+  Time = test_vals,
+  Custom = my_results,
+  BuiltIn = r_results,
+  Equal = (my_results == r_results)
+)
+
+print(comparison)
+# Plot  results as a step line
+plot(test_vals, my_results, type = "s", col = "darkgreen", lwd = 4,
+     main = "Validation: My ECDF vs R's ECDF", xlab = "Hours", ylab = "Fn(t)")
+
+# Overlay R results as dashed line for overlap analysis
+lines(test_vals, r_results, type = "s", col = "white", lty = 2, lwd = 2)
+```
+
+```{r} 
+
+```
+b) A colleague claims that the probability of failure before 100 hours is 0.5 based on these data. Do you agree? Explain your reasoning using the empirical cumulative distribution function (ECDF).
+```{r}
+#Can now use the ecdf function created above to validate this claim
+prob_100 <- my_ecdf(data = failure_times, t = 100)
+print(prob_100)
+
+#Can also test this with the r built-in ecdf 
+r_100 <- r_builtin_func(100)
+print(r_100)
+
+#I agree that the probability of failure before 100 hours is 0.5 - the ecdf returns the cumulative height of the fourth step of the function, as this is where '100' falls. The fourth step represents 4/8 of the data which is 0.5
+```
+
+\
+
+## **Question 2: Density Function Estimation**
+
+Consider the following failure times from a mechanical system:
+
+<center> 12.3, 14.7, 15.2, 16.8, 18.1, 19.4, 20.6, 22.3, 23.9, 25.4 </center>
+
+a) Create a histogram of the data using 3 equally spaced bins. What is the estimated density in each bin? Describe the shape of the histogram's distribution.
+```{r}
+times <- c(12.3, 14.7, 15.2, 16.8, 18.1, 19.4, 20.6, 22.3, 23.9, 25.4)
+
+# 1. Create the histogram and store it
+# freq = FALSE is required to get density instead of counts
+hist_output <- hist(times, breaks = 3, freq = FALSE, plot = TRUE)
+
+# 2. Print the density values
+cat("The estimated densities for the 3 bins are:\n")
+print(hist_output$density)
+
+# 3. To see which density belongs to which range:
+cat("\nThe bin breaks are:\n")
+print(hist_output$breaks)
+
+#The histogram is approximately symmetric. 
+```
+
+b) Write an R function that computes kernel density estimates using a Gaussian kernel with $h=2$. Validate your implementation against R's built-in density() function.
+
+$$
+\hat{f}_h(t) = \frac{1}{nh}\sum_{i=1}^n K\left( \frac{t-t_i}{h}\right), \ \ \text{ where } \ \ K(u) = \frac{1}{\sqrt{2\pi}} e^{-u^2/2}.
+$$
+```{r}
+# My  Gaussian kde
+# x_in:  raw failure data
+# h: bandwidth 
+# x_out: points where we want to estimate the density
+calc_kde <- function(x_in, h, x_out) {
+  n <- length(x_in)
+  
+  # Set up a vector of zeros 
+  densities <- numeric(length(x_out))
+  
+  for (j in 1:length(x_out)) {
+    # Calculate the average height of  Gaussian kernels at point x_out[j]
+    # dnorm - mean is the data point; sd is bandwidth h
+    kernel_heights <- dnorm(x_out[j], mean = x_in, sd = h)
+    densities[j] <- sum(kernel_heights) / n
+  }
+  
+  return(densities)
+}
+# 1. Setup data using observed failure times
+times <- c(12.3, 14.7, 15.2, 16.8, 18.1, 19.4, 20.6, 22.3, 23.9, 25.4)
+h_val <- 2
+test_points <- seq(10, 30, length.out = 10)
+
+# 2. Run my function
+my_kde_results <- calc_kde(times, h_val, test_points)
+
+# 3. Run R's built-in density
+
+r_kde_obj <- density(
+  times,
+  bw = h_val,
+  kernel = "gaussian",
+  from = min(test_points),
+  to   = max(test_points),
+  n    = length(test_points),
+  cut  = 0
+)
+r_kde_results <- approx(r_kde_obj$x, r_kde_obj$y, xout = test_points)$y
+
+# 4. Compare
+comparison <- data.frame(
+  Time = test_points,
+  My_KDE = my_kde_results,
+  R_KDE = r_kde_results,
+  Difference = my_kde_results - r_kde_results
+)
+
+print(comparison)
+```
+c) Write a custom R function that computes kernel density estimates using the Epanechnikov kernel with $h=2$. Validate your implementation by comparing results with R's built-in density() function for Gaussian kernel estimation.
+
+$$
+\hat{f}_h(t) = \frac{1}{nh}\sum_{i=1}^n K\left( \frac{t-t_i}{h}\right), \ \ \text{ where } \ \ K(u) = \frac{3}{4}(1 - u^2) \ \ \text{ for } \ \ |u| \le 1.
+$$
+```{r}
+my_epan_kde <- function(x_in, h, x_out) {
+  n <- length(x_in)
+  densities <- numeric(length(x_out))
+  
+  for (i in 1:length(x_out)) {
+    # 1. Calculate distance (u)
+    u <- (x_out[i] - x_in) / h
+    
+    # 2. Apply parabola formula: 3/4 * (1 - u^2)
+    k_values <- (3/4) * (1 - u^2)
+    
+    # 3. if distance |u| is > 1, the result must be 0
+    # This replaces any negative or "out of bounds" values with 0
+    k_values[abs(u) > 1] <- 0
+    
+    # 4. Final Sum
+    densities[i] <- sum(k_values) / (n * h)
+  }
+  return(densities)
+}
+
+h_val <- 2
+test_pts <- seq(10, 30, length.out = 10)
+
+# my epanechnikov
+my_epan_results <- my_epan_kde(times, h_val, test_pts)
+
+# R's built-in Epanechnikov
+r_epan_obj <- density(times, bw = h_val, kernel = "epanechnikov")
+r_epan_results <- approx(r_epan_obj$x, r_epan_obj$y, xout = test_pts)$y
+
+# Compare
+data.frame(Time = test_pts, Custom = my_epan_results, BuiltIn = r_epan_results)
+
+#To validate the implementation, the custom Epanechnikov KDE was compared to R’s density() using the Epanechnikov kernel, showing close agreement. For completeness, a Gaussian kernel estimate was also examined, which exhibits smoother tails as expected
+
+#In the custom my_epan_kde() function, observations with ∣x0−xi∣> hare assigned zero weight via k_values[abs(u) > 1] <- 0, reflecting the compact support of the Epanechnikov kernel. As a result, the density estimate is exactly zero at evaluation points where no observations lie within h = 2.
+```
+d) How does the choice of kernel (Gaussian vs. Epanechnikov) affect the density estimate? For both kernel estimators applied to this dataset, what happens when we select $h=1.5$ versus $h=2.5$?
+
+#
+The kernel choice affects the smoothness and tail behavior of the estimate. The Gaussian kernel produces smoother curves/non-zero tails and the Epanechnikov kerenel yields localized estimates. Selecting h = 1.5 for the bandwith results in an estimable that is more variable; h = 2.5 reduces varianceand produces a smoother curve with more bias.
+
+
+
+
