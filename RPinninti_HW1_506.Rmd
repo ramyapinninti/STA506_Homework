@@ -224,6 +224,10 @@ lines(test_vals, r_results, type = "s", col = "white", lty = 2, lwd = 2)
 
 ```
 b) A colleague claims that the probability of failure before 100 hours is 0.5 based on these data. Do you agree? Explain your reasoning using the empirical cumulative distribution function (ECDF).
+
+#
+I agree that the probability of failure before 100 hours is 0.5 - the ecdf returns the cumulative height of the fourth step of the function, as this is where '100' falls. The fourth step represents 4/8 of the data which is 0.5
+
 ```{r}
 #Can now use the ecdf function created above to validate this claim
 prob_100 <- my_ecdf(data = failure_times, t = 100)
@@ -233,7 +237,6 @@ print(prob_100)
 r_100 <- r_builtin_func(100)
 print(r_100)
 
-#I agree that the probability of failure before 100 hours is 0.5 - the ecdf returns the cumulative height of the fourth step of the function, as this is where '100' falls. The fourth step represents 4/8 of the data which is 0.5
 ```
 
 \
@@ -245,6 +248,8 @@ Consider the following failure times from a mechanical system:
 <center> 12.3, 14.7, 15.2, 16.8, 18.1, 19.4, 20.6, 22.3, 23.9, 25.4 </center>
 
 a) Create a histogram of the data using 3 equally spaced bins. What is the estimated density in each bin? Describe the shape of the histogram's distribution.
+#
+The histogram is approximately symmetric. 
 ```{r}
 times <- c(12.3, 14.7, 15.2, 16.8, 18.1, 19.4, 20.6, 22.3, 23.9, 25.4)
 
@@ -260,7 +265,6 @@ print(hist_output$density)
 cat("\nThe bin breaks are:\n")
 print(hist_output$breaks)
 
-#The histogram is approximately symmetric. 
 ```
 
 b) Write an R function that computes kernel density estimates using a Gaussian kernel with $h=2$. Validate your implementation against R's built-in density() function.
@@ -320,7 +324,11 @@ comparison <- data.frame(
 print(comparison)
 ```
 c) Write a custom R function that computes kernel density estimates using the Epanechnikov kernel with $h=2$. Validate your implementation by comparing results with R's built-in density() function for Gaussian kernel estimation.
+#
+To validate the implementation, the custom Epanechnikov KDE was compared to R’s density() using the Epanechnikov kernel, showing close agreement. For completeness, a Gaussian kernel estimate was also examined, which exhibits smoother tails as expected
 
+#
+In the custom my_epan_kde() function, observations with ∣x0−xi∣> hare assigned zero weight via k_values[abs(u) > 1] <- 0, reflecting the compact support of the Epanechnikov kernel. As a result, the density estimate is exactly zero at evaluation points where no observations lie within h = 2.
 $$
 \hat{f}_h(t) = \frac{1}{nh}\sum_{i=1}^n K\left( \frac{t-t_i}{h}\right), \ \ \text{ where } \ \ K(u) = \frac{3}{4}(1 - u^2) \ \ \text{ for } \ \ |u| \le 1.
 $$
@@ -359,14 +367,12 @@ r_epan_results <- approx(r_epan_obj$x, r_epan_obj$y, xout = test_pts)$y
 # Compare
 data.frame(Time = test_pts, Custom = my_epan_results, BuiltIn = r_epan_results)
 
-#To validate the implementation, the custom Epanechnikov KDE was compared to R’s density() using the Epanechnikov kernel, showing close agreement. For completeness, a Gaussian kernel estimate was also examined, which exhibits smoother tails as expected
 
-#In the custom my_epan_kde() function, observations with ∣x0−xi∣> hare assigned zero weight via k_values[abs(u) > 1] <- 0, reflecting the compact support of the Epanechnikov kernel. As a result, the density estimate is exactly zero at evaluation points where no observations lie within h = 2.
 ```
 d) How does the choice of kernel (Gaussian vs. Epanechnikov) affect the density estimate? For both kernel estimators applied to this dataset, what happens when we select $h=1.5$ versus $h=2.5$?
 
 #
-The kernel choice affects the smoothness and tail behavior of the estimate. The Gaussian kernel produces smoother curves/non-zero tails and the Epanechnikov kerenel yields localized estimates. Selecting h = 1.5 for the bandwith results in an estimable that is more variable; h = 2.5 reduces varianceand produces a smoother curve with more bias.
+The kernel choice affects the smoothness and tail behavior of the estimate. The Gaussian kernel produces smoother curves/non-zero tails and the Epanechnikov kernel yields localized estimates. Selecting h = 1.5 for the bandwidth results in an estimate that is more variable; h = 2.5 reduces variance and produces a smoother curve with more bias.
 
 
 
