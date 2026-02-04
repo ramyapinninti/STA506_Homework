@@ -329,11 +329,11 @@ print(comparison)
 c) Write a custom R function that computes kernel density estimates using the Epanechnikov kernel with $h=2$. Validate your implementation by comparing results with R's built-in density() function for Gaussian kernel estimation.
 
 
-#
-To validate the implementation, the custom Epanechnikov KDE was compared to R’s density() using the Epanechnikov kernel, showing close agreement. For completeness, a Gaussian kernel estimate was also examined, which exhibits smoother tails as expected.
+
+
 
 #
-In the custom my_epan_kde() function, observations with ∣x0−xi| are assigned zero weight via k_values[abs(u) > 1] <- 0, reflecting the compact support of the Epanechnikov kernel. As a result, the density estimate is exactly zero at evaluation points where no observations lie within h = 2.
+To validate the implementation, the custom Epanechnikov KDE was compared to R’s density() using the Epanechnikov kernel, showing close agreement. For completeness, a Gaussian kernel estimate was also examined, which exhibits smoother tails as expected.                                               In the custom my_epan_kde() function, observations with ∣x0−xi| are assigned zero weight via k_values[abs(u) > 1] <- 0, reflecting the compact support of the Epanechnikov kernel. As a result, the density estimate is exactly zero at evaluation points where no observations lie within h = 2.
 
 $$
 \hat{f}_h(t) = \frac{1}{nh}\sum_{i=1}^n K\left( \frac{t-t_i}{h}\right), \ \ \text{ where } \ \ K(u) = \frac{3}{4}(1 - u^2) \ \ \text{ for } \ \ |u| \le 1.
