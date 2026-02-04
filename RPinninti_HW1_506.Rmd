@@ -327,6 +327,8 @@ comparison <- data.frame(
 print(comparison)
 ```
 c) Write a custom R function that computes kernel density estimates using the Epanechnikov kernel with $h=2$. Validate your implementation by comparing results with R's built-in density() function for Gaussian kernel estimation.
+
+
 #
 To validate the implementation, the custom Epanechnikov KDE was compared to R’s density() using the Epanechnikov kernel, showing close agreement. For completeness, a Gaussian kernel estimate was also examined, which exhibits smoother tails as expected.
 
