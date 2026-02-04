@@ -338,7 +338,6 @@ c) Write a custom R function that computes kernel density estimates using the Ep
 $$
 \hat{f}_h(t) = \frac{1}{nh}\sum_{i=1}^n K\left( \frac{t-t_i}{h}\right), \ \ \text{ where } \ \ K(u) = \frac{3}{4}(1 - u^2) \ \ \text{ for } \ \ |u| \le 1.
 $$
-#
 To validate the implementation, the custom Epanechnikov KDE was compared to R’s density() using the Epanechnikov kernel, showing close agreement. For completeness, a Gaussian kernel estimate was also examined, which exhibits smoother tails as expected.   
 
 ```{r}
