@@ -1,0 +1,355 @@
+---
+title: "Assignment 2: Sampling Distributions"
+author: "Ramya Pinninti "
+date: " Due: 10 February, 2026"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: no
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: yes
+    theme: lumen
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    number_sections: yes
+    fig_width: 3
+    fig_height: 3
+  word_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    keep_md: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{css, echo = FALSE}
+#TOC::before {
+  content: "Table of Contents";
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  color: navy;
+  margin-bottom: 10px;
+}
+
+
+div#TOC li {     /* table of content  */
+    list-style:upper-roman;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+}
+
+h1.title {    /* level 1 header of title  */
+  font-size: 22px;
+  font-weight: bold;
+  color: DarkRed;
+  text-align: center;
+  font-family: "Gill Sans", sans-serif;
+}
+
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 15px;
+  font-weight: bold;
+  font-family: system-ui;
+  color: navy;
+  text-align: center;
+}
+
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  font-weight: bold;
+  font-family: "Gill Sans", sans-serif;
+  color: DarkBlue;
+  text-align: center;
+}
+
+h1 { /* Header 1 - and the author and data headers use this too  */
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: center;
+}
+
+h2 { /* Header 2 - and the author and data headers use this too  */
+    font-size: 18px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { /* Header 3 - and the author and data headers use this too  */
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h4 { /* Header 4 - and the author and data headers use this too  */
+    font-size: 14px;
+  font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+/* Add dots after numbered headers */
+.header-section-number::after {
+  content: ".";
+
+body { background-color:white; }
+
+.highlightme { background-color:yellow; }
+
+p { background-color:white; }
+
+}
+```
+
+```{r setup, include=FALSE}
+# code chunk specifies whether the R code, warnings, and output 
+# will be included in the output files.
+if (!require("knitr")) {
+   install.packages("knitr")
+   library(knitr)
+}
+if (!require("pander")) {
+   install.packages("pander")
+   library(pander)
+}
+if (!require("ggplot2")) {
+  install.packages("ggplot2")
+  library(ggplot2)
+}
+if (!require("tidyverse")) {
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+if (!require("plotly")) {
+  install.packages("plotly")
+  library(plotly)
+}
+####
+knitr::opts_chunk$set(echo = TRUE,       # include code chunk in the output file
+                      warning = FALSE,   # sometimes, you code may produce warning messages,
+                                         # you can choose to include the warning messages in
+                                         # the output file. 
+                      results = TRUE,    # you can also decide whether to include the output
+                                         # in the output file.
+                      message = FALSE,
+                      comment = NA
+                      )  
+```
+ 
+ \
+ 
+
+
+\
+
+## **I: The Normal Distribution**
+
+  The normal distribution, often called the Gaussian distribution, is widely known among statistical and non-statistical audiences as a symmetric, bell-shaped curve that appears to have one peak. It is a model in which data is clustered around the central value or mean. A curve fitting this data would have its highest peak at the mean, with the height decreasing as you move further away from the center.
+
+  To explore a real-world application of the normal distribution, a continuous variable such as SAT test scores can be examined. Say that we have a population of high school students at a private school – there will be an average test score for this population, with most data clustering at the mean. The mean (μ) is determined by adding all scores and dividing by the number of observations. There will also be observations to the left and right of this central point that are, respectively, less than and greater than the central value. As we reach data in the ‘tails’ of our distribution, we are less likely to see observations, as most people will be closer to the average score or within a standard deviation or two away from the mean. 
+
+  Another parameter of the normal distribution is standard deviation ( σ) - higher standard deviation shows that the data has more variability and takes on values further from the mean. This value is found by calculating the deviations from the mean, squaring deviations and summing them, dividing by n to find the population variance, and taking the square root. 
+
+  To summarize, key properties of the normal distribution are that data is continuous, the curve is perfectly symmetric about the mean, and that the empirical rule applies (68% of data within 1 standard deviation, 95% within 2, and 99.7% within 3). 
+
+```{r}
+set.seed(42)
+
+n <- 50000              # bigger sample = smoother
+mean_score <- 1050
+sd_score <- 200
+
+scores <- rnorm(n, mean = mean_score, sd = sd_score)
+
+hist(scores,
+     breaks = 80,
+     probability = TRUE,
+     col = "lightblue",
+     border = "white",
+     main = "Simulated SAT Scores (Normal / Bell Curve)",
+     xlab = "SAT Score")
+
+# Overlay the theoretical normal curve
+x <- seq(min(scores), max(scores), length.out = 400)
+y <- dnorm(x, mean = mean_score, sd = sd_score)
+
+lines(x, y, lwd = 3, col = "black")
+
+abline(v = mean_score, col = "red", lwd = 2, lty = 2)
+
+```
+
+## **II: T-Distribution**
+
+  What happens if the population standard deviation, sigma, is unknown? Instead of using the population standard deviation, we use the sample standard deviation to estimate it. This is found in the formula for the t-statistic, which is used for hypothesis testing in t-tests using a t-distribution. As we are estimating a parameter with a statistic, there will be greater variability and the t-distribution will appear to be more spread out with ‘larger’ tails, compared to the normal distribution.
+  
+  However, as the degrees of freedom—equal to n-1 for a one-sample t test—increase, the t-distribution gets closer to the standard normal distribution.
+  
+  To explore real-world use of a t-test, say that a small media company is releasing a movie trailer and 15 viewers are invited to have an exclusive look. The goal is to achieve a viewer rating of 4.0 out of 5 and we can assume that ratings are approximately normally distributed. In a random sample, the sample mean was found to be 3.6 and the sample standard deviation 0.8. A one-sample t-test would be able to determine whether the average rating is below 4.0 (the alternative hypothesis) or whether the trailer meets its goal (the target mean of 4.0). 
+  
+  Other than a one-sample t test, a two-sample t-test or a paired t-test can be conducted to determine if population means for two different groups are equal or not or to decide if the difference between paired measurements for a given population is zero, respectively. Assumptions for a one-sample t-test are that the sample data are randomly sampled from an approximately normally distributed population, observations are independent, and the population standard deviation is unknown. Assumptions for a two-sample t-test include independence between groups.
+
+```{r}
+
+```
+
+## **II: Chi-Square Distribution**
+
+  Similar to the t-distribution, the chi-squared distribution is a probability distribution that is characterized by degrees of freedom. It is used for hypothesis testing and goodness-of-fit determination. The assumptions for a chi-square test include the following: the data should be expressed as counts or frequencies, observations should be independent, and the data should be collected through random sampling. 
+
+  Whereas the t and normal distributions had symmetric curves, the chi-squared distribution is asymmetric, skewed to the right, and non-negative. It is constructed through squaring a standard normal random variable   Z∼N(0,1); this is a chi-square with 1 degree of freedom.
+
+  A real-world application of a chi-square test of independence is testing two different thumbnail designs for a television show, designated thumbnails A and B. If there is a sample of user data showing counts of ‘clicked’ and ‘didn’t click’ for both thumbnails, the following research question could be posed: “Is clicking independent of thumbnail design, or does the design influence a user’s click behavior?”
+
+
+```{r}
+# Chi-square example: Thumbnail A vs B and Clicked vs Not Clicked
+# We'll (1) simulate data like the example, (2) run chisq.test,
+# and (3) simulate the chi-square statistic many times to show its distribution.
+
+set.seed(42)
+
+# --- 1) Simulate ONE experiment (like the table in the prompt) ---
+nA <- 200
+nB <- 200
+
+# Choose click probabilities (set equal for "null" scenario, different for "alternative")
+pA <- 0.30  # Thumbnail A click probability
+pB <- 0.45  # Thumbnail B click probability
+
+clickedA <- rbinom(1, size = nA, prob = pA)
+clickedB <- rbinom(1, size = nB, prob = pB)
+
+notClickedA <- nA - clickedA
+notClickedB <- nB - clickedB
+
+tab <- matrix(
+  c(clickedA, notClickedA,
+    clickedB, notClickedB),
+  nrow = 2, byrow = TRUE
+)
+rownames(tab) <- c("Thumbnail_A", "Thumbnail_B")
+colnames(tab) <- c("Clicked", "Not_Clicked")
+
+tab
+
+# Chi-square test of independence
+test <- chisq.test(tab, correct = FALSE)  # correct=FALSE avoids Yates correction for 2x2
+test
+
+
+
+# --- 2) Simulate the chi-square statistic many times (to see the distribution) ---
+
+simulate_chisq_stats <- function(R = 5000, nA = 200, nB = 200, pA = 0.30, pB = 0.45) {
+  stats <- numeric(R)
+
+  for (i in seq_len(R)) {
+    cA <- rbinom(1, nA, pA)
+    cB <- rbinom(1, nB, pB)
+
+    t <- matrix(c(cA, nA - cA,
+                  cB, nB - cB),
+                nrow = 2, byrow = TRUE)
+
+    stats[i] <- suppressWarnings(chisq.test(t, correct = FALSE)$statistic)
+  }
+  stats
+}
+
+R <- 10000
+
+# A) Under the NULL: same click rate for A and B (independence is true)
+chisq_null <- simulate_chisq_stats(R = R, nA = 200, nB = 200, pA = 0.35, pB = 0.35)
+
+# B) Under the ALTERNATIVE: different click rates (like an A/B test where thumbnail matters)
+chisq_alt  <- simulate_chisq_stats(R = R, nA = 200, nB = 200, pA = 0.30, pB = 0.45)
+
+# Plot histograms + overlay the theoretical chi-square density (df = 1 for a 2x2 table)
+df <- 1
+
+hist(chisq_null, breaks = 50, freq = FALSE,
+     main = "Chi-square statistic under NULL (pA = pB)",
+     xlab = "Chi-square statistic")
+curve(dchisq(x, df = df), add = TRUE, lwd = 2)
+
+hist(chisq_alt, breaks = 50, freq = FALSE,
+     main = "Chi-square statistic under ALTERNATIVE (pA != pB)",
+     xlab = "Chi-square statistic")
+curve(dchisq(x, df = df), add = TRUE, lwd = 2)
+
+
+```
+
+
+## **II: F-Distribution**
+
+  Lastly, the F distribution is also used for hypothesis testing and can be applied in contexts such as comparing population variances and comparing means across multiple groups (ANOVA). It is right skewed and non-negative. Like the chi-square and t-distributions, it has a parameter of degrees of freedom. The test statistic is calculated by dividing two independent chi-square random variables, resulting in degrees of freedom for both the numerator and denominator.  
+  
+  The assumptions for an ANOVA F-test include independence of observations, homogeneity of variance, normality of populations sampled, and random sampling. 
+  
+  Looking at another real-world example in media, an entertainment company may want to determine which trailer for a movie leads to the highest average watch time. If they create 3 edits of a trailer, randomly show each one to different users, and record watch time, they might want to know whether the average watch times are the same across all trailers or meaningfully different for at least one. An F-statistic can be calculated using this data and an F test conducted to test for a difference in mean watch time across trailer types. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+############################################################
+# ANOVA F-test (media trailer example)
+
+############################################################
+
+set.seed(123)
+
+# --- Simulate ONE experiment: 3 trailer edits, watch time outcome ---
+n_per_group <- 60   # viewers per trailer
+sd_within   <- 25   # viewer-to-viewer variability (seconds)
+
+# Under H0: all trailers have the same true mean watch time
+mu <- c(120, 120, 120)
+
+watch_time <- c(
+  rnorm(n_per_group, mean = mu[1], sd = sd_within),
+  rnorm(n_per_group, mean = mu[2], sd = sd_within),
+  rnorm(n_per_group, mean = mu[3], sd = sd_within)
+)
+
+trailer <- factor(rep(c("A", "B", "C"), each = n_per_group))
+
+df <- data.frame(trailer = trailer, watch_time = watch_time)
+
+# --- ANOVA  ---
+fit <- aov(watch_time ~ trailer, data = df)
+summary(fit)
+
+############################################################
+
+############################################################
+
+# Extract F statistic without printing it
+obs_F <- summary(fit)[[1]]$`F value`[1]
+
+# Degrees of freedom (k groups, N total)
+k <- nlevels(df$trailer)
+N <- nrow(df)
+df1 <- k - 1
+df2 <- N - k
+
+# Critical value at alpha=0.05 (computed, not printed)
+alpha <- 0.05
+F_crit <- qf(1 - alpha, df1 = df1, df2 = df2)
+
+```
