@@ -1,5 +1,5 @@
 ---
-title: "Assignment 7: Constructing Likelihood Ratio Confidence Interval"
+title: "Assignment 6: Constructing Likelihood Ratio Confidence Interval"
 author: "Ramya Pinninti"
 date: " Due: March 24, 2026"
 output:
