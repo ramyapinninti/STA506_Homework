@@ -1,0 +1,484 @@
+---
+title: "Assignment 8: Bootstrap Methods and Applications"
+author: "Ramya Pinninti "
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: no
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: yes
+    highlight: monochrome
+    theme: spacelab
+  word_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    keep_md: yes
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    number_sections: yes
+    fig_width: 3
+    fig_height: 3
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{css, echo = FALSE}
+#TOC::before {
+  content: "Table of Contents";
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  color: navy;
+  margin-bottom: 10px;
+}
+
+
+div#TOC li {     /* table of content  */
+    list-style:upper-roman;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+}
+
+h1.title {    /* level 1 header of title  */
+  font-size: 22px;
+  font-weight: bold;
+  color: DarkRed;
+  text-align: center;
+  font-family: "Gill Sans", sans-serif;
+}
+
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 15px;
+  font-weight: bold;
+  font-family: system-ui;
+  color: navy;
+  text-align: center;
+}
+
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  font-weight: bold;
+  font-family: "Gill Sans", sans-serif;
+  color: DarkBlue;
+  text-align: center;
+}
+
+h1 { /* Header 1 - and the author and data headers use this too  */
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: center;
+}
+
+h2 { /* Header 2 - and the author and data headers use this too  */
+    font-size: 18px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { /* Header 3 - and the author and data headers use this too  */
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h4 { /* Header 4 - and the author and data headers use this too  */
+    font-size: 14px;
+  font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+/* Add dots after numbered headers */
+.header-section-number::after {
+  content: ".";
+
+body {background-color: #ffffff;
+      color: #000000;
+      font-family: Arial, sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      }
+
+.highlightme { background-color:yellow; }
+
+p { background-color:white; }
+
+}
+```
+
+```{r setup, include=FALSE}
+# code chunk specifies whether the R code, warnings, and output 
+# will be included in the output files.
+if (!require("knitr")) {
+   install.packages("knitr")
+   library(knitr)
+}
+if (!require("pander")) {
+   install.packages("pander")
+   library(pander)
+}
+if (!require("ggplot2")) {
+  install.packages("ggplot2")
+  library(ggplot2)
+}
+if (!require("tidyverse")) {
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+if (!require("plotly")) {
+  install.packages("plotly")
+  library(plotly)
+}
+
+if (!require("VGAM")) {
+  install.packages("VGAM")
+  library(VGAM)
+}
+#### VGAM
+knitr::opts_chunk$set(echo = TRUE,       # include code chunk in the output file
+                      warning = FALSE,   # sometimes, you code may produce warning messages,
+                                         # you can choose to include the warning messages in
+                                         # the output file. 
+                      results = TRUE,    # you can also decide whether to include the output
+                                         # in the output file.
+                      message = FALSE,
+                      comment = NA
+                      )  
+```
+ 
+ \
+ 
+## **Assignment Objectives** 
+
+<p>
+* Reinforce the understanding of Bootstrap sampling .
+
+* Understand the bootstrap estimation: confidence interval and sampling distribution.
+</p>
+
+
+## **Policies of Using AI Tools**
+
+<p>
+**Policy on AI Tool Use**: Please adhere to the AI tool policy specified in the course syllabus. The direct copying of AI-generated content is strictly prohibited. All submitted work must reflect your own understanding; where external tools are consulted, content must be thoroughly rephrased and synthesized in your own words.
+</p>
+
+<p>
+**Code Inclusion Requirement**: Any code included in your essay must be properly commented to explain the purpose and/or expected output of key code lines. Submitting AI-generated code without meaningful, student-added comments will not be accepted.
+</p>
+
+
+<p>**Log-normal Distribution Revisited**</p>
+
+<p>
+If $Y = \ln(X) \sim N(\mu, \sigma^2)$, then $X$ follows a lognormal distribution $X \sim \text{Lognormal}(\mu, \sigma^2)$. The probability density is given by
+
+$$
+f(x|\mu,\sigma) = \frac{1}{x\sigma\sqrt{2\pi}} \exp\left(-\frac{(\ln x - \mu)^2}{2\sigma^2}\right), \quad x > 0
+$$
+
+After some algebra, we can express the mean and variance of the above lognormal distribution in the following
+
+
+\begin{align}
+\mathbb{E}[X] &= \exp\left(\mu + \frac{\sigma^2}{2}\right) \\
+\text{Var}(X) &= [\exp(\sigma^2) - 1] \exp(2\mu + \sigma^2)
+\end{align}
+
+
+Using the relationship between normal and log-normal distribution and a sample $\{x_1, x_2, \dots, x_n\}$, the MLE estimators of $\mu$ and $\sigma^2$ are given by
+
+
+\begin{align}
+\hat{\mu} &= \frac{1}{n}\sum_{i=1}^n \ln(x_i) \\
+\hat{\sigma}^2 &= \frac{1}{n}\sum_{i=1}^n (\ln(x_i) - \hat{\mu})^2
+\end{align}
+
+
+Using the plug-in principle of MLE, we have the MLE of $\mathbb{E}[X]$ and $\text{Var}(X)$ in the following
+
+$$
+\boxed{\widehat{\mathbb{E}[X]} = \exp\left(\hat{\mu} + \frac{\hat{\sigma}^2}{2}\right)}
+$$
+
+</P>
+
+
+
+<p><font color = "blue">**This assignment focuses on constructing various bootstrap confidence intervals of the lognormal population mean $\mathbb{E}[X]$**</font></p>
+
+
+\
+
+## **Question: Trace Metal Concentrations in Soil**
+
+<p>
+Soil lead (Pb) concentrations (mg/kg) from 55 urban garden sites. Trace metals in environmental media typically follow lognormal distributions due to:
+
+* Multiplicative processes controlling accumulation
+
+* Positive constraints (concentrations cannot be negative)
+
+* Right-skewed nature of contamination patterns
+</p>
+
+
+
+<p>
+```
+0.85, 1.23, 0.92, 3.45, 2.11, 1.56, 4.89, 2.34, 1.78, 6.72, 0.95, 1.34, 8.91, 
+2.67, 1.89, 5.43, 1.12, 3.78, 2.45, 7.65, 1.05, 1.45, 12.34, 2.89, 2.01, 4.56, 
+1.23, 4.32, 2.67, 9.87, 0.99, 1.56, 15.23, 3.12, 2.34, 3.89, 1.34, 5.67, 2.89, 
+11.45, 1.12, 1.67, 18.90, 3.45, 2.56, 3.45, 1.45, 6.78, 3.12, 14.56, 1.23, 1.78, 
+22.34, 3.78, 2.78
+```
+</p>
+
+<p>
+
+$$\boxed{\text{Instructions:}}$$
+
+Assume the data follow a log-normal distribution. For each question in parts (b)–(d), begin by clearly explaining the reasoning behind your analytical approach. Then, develop your own R functions to implement three types of confidence intervals: the asymptotic interval, the percentile bootstrap interval, and the bias-corrected and accelerated (BCa) bootstrap interval. Use these functions to construct the required confidence intervals, and verify your results using the appropriate functions from the `boot` package.
+
+You are encouraged to design a wrapper function that integrates all confidence interval methods, allowing users to select the desired method through an input argument.
+</P>
+
+<p>
+
+$$\boxed{\text{Individual Questions:}}$$
+
+a). Perform 5000 bootstrap samples to estimate the bootstrap sampling distribution of $\boxed{\widehat{\mathbb{E}[X]}}$. Display the distribution using either a histogram or a kernel density plot. Comment on the shape, variability, and any notable patterns observed in the bootstrap sampling distribution.
+
+
+The bootstrap sampling distribution of the mean is unimodal and slightly right-skewed, which reflects the skewness of the soil concentration data. With a sample size of 55, the Central Limit Theorem applies and the distribution approaches normality, but the tail of high lead concentrations maintains a slight positive skew in the bootstrap replicates. Due to the skewed distribution, a Normal interval will have poor coverage probability. The BCa interval will be examined to see whether skewness and bias can be corrected.
+
+```{r}
+
+pb_data <- c(0.85, 1.23, 0.92, 3.45, 2.11, 1.56, 4.89, 2.34, 1.78, 6.72, 0.95, 1.34, 8.91, 2.67, 1.89, 5.43, 1.12, 3.78, 2.45, 7.65, 1.05, 1.45, 12.34, 2.89, 2.01, 4.56, 
+1.23, 4.32, 2.67, 9.87, 0.99, 1.56, 15.23, 3.12, 2.34, 3.89, 1.34, 5.67, 2.89, 
+11.45, 1.12, 1.67, 18.90, 3.45, 2.56, 3.45, 1.45, 6.78, 3.12, 14.56, 1.23, 1.78, 
+22.34, 3.78, 2.78)
+
+set.seed(42) 
+B <- 5000
+boot_means <- numeric(B)
+
+#bootstramp sampling
+for(i in 1:B) {
+  sample_resample <- sample(pb_data, size = length(pb_data), replace = TRUE)
+  boot_means[i] <- mean(sample_resample)
+}
+
+hist(boot_means, breaks = 40, prob = TRUE, col = "skyblue", border = "white",
+     main = "Bootstrap Sampling Distribution of Mean Pb",
+     xlab = "Bootstrap Sample Mean (mg/kg)")
+lines(density(boot_means), col = "darkblue", lwd = 2)
+
+abline(v = mean(pb_data), col = "red", lwd = 2, lty = 2)
+legend("topright", legend=c("Density", "Sample Mean"), col=c("darkblue", "red"), lty=c(1, 2))
+
+
+
+#percentile bounds
+lower_bound <- quantile(boot_means, 0.025)
+upper_bound <- quantile(boot_means, 0.975)
+
+#add to plot
+abline(v = c(lower_bound, upper_bound), col = "darkgreen", lwd = 2, lty = 3)
+
+
+text(x = 6, y = 0.5, labels = paste("95% Percentile CI:\n[", 
+                                    round(lower_bound, 2), ",", 
+                                    round(upper_bound, 2), "]"), col = "darkgreen")
+
+```
+
+
+<p>
+b). Construct a 95% bootstrap percentile confidence interval for $\mu_{LN} = \mathbb{E}[X]$.
+
+<p> The percentile confidence interval method is more flexible than the asymptotic method, allowing the interval to be asymmetric. It uses the $\alpha/2$ and $1-\alpha/2$ quantiles of the bootstrap distribution. However, the approach assumed that the bootstrap distribution is a reliable map of the population. 
+
+</p>
+
+
+
+c). Construct a 95% bootstrap BCa confidence interval for $\mu_{LN} = \mathbb{E}[X]$.
+
+<p>
+Reasoning: The BCa interval is the most robust method as it adjusts for bias (if the bootstrap mean differs from the sample mean) and acceleration. This is useful for skewed environmental data. Considering that the distribution is log-normal, the standard error could change depending on the value of the mean. The acceleration factor considers how the variance changes along the distribution. The interval width is adjusted to ensure that the coverage probability remains at 95%. 
+
+</p>
+
+d). Use the Central Limit Theorem to construct a 95% asymptotic confidence interval for $\mu_{LN} = \mathbb{E}[X]$.
+
+<p>
+This analytic method is based on the Central Limit Theorem which states that, for large $n$, the sampling distribution of the mean is approximately normal, regardless of the underlying population distribution. 
+
+There is a coverage probability risk of 'under-fitting,' and the true mean could fall outside this symmetric interval more often than the intended 5% of the time.
+
+</p>
+
+f). Assuming the confidence intervals constructed in the previous parts are valid, evaluate their performance by comparing their widths, symmetry, stability, and sensitivity to distributional skewness. Then, provide a well‑reasoned recommendation regarding which method is most suitable for this analysis.
+
+
+<p>
+**Evaluation of Confidence Interval Performance**
+
+The analysis of lead concentrations in urban garden soil requires a statistical approach that accounts for the right-skewed, log-normal nature of the data. Because trace metal accumulation is often concentrated in specific high-value areas, the choice of a confidence interval directly impacts the accuracy and reliability of the estimated population mean.
+</p>
+
+<p>
+**Width and Symmetry**
+
+The asymptotic interval is based on the Central Limit Theorem and is perfectly symmetric. This symmetry is a limitation for soil data. By assuming a normal distribution, this method creates a boundary that is often too low on the high end of the scale. In contrast, the percentile and BCa intervals are asymmetric. They expand further to the right, which more accurately reflects the presence of high-concentration samples in the original data set.
+
+Based on the results, the BCa interval is the widest.
+
+BCa CI using custom function:
+(3.386498  5.928322)
+
+Percentile CI:
+(3.243064 5.70528)
+
+Asymptotic: 
+ 
+(3.163530 5.632107)
+ 
+Although the asymptotic and percentile are narrower, they can potentially miss the true mean due to the right-side fit. 
+</p>
+
+
+<p>
+**Stability and Sensitivity to Skewness**
+
+The percentile bootstrap improves upon the asymptotic method by using the actual distribution of the data rather than a theoretical curve. It is more robust when the data contains outliers. However, the BCa interval is the most sophisticated option because it addresses both bias and acceleration. 'Acceleration' refers to the way the standard error changes relative to the parameter. 
+
+For log-normal data, the BCa method is the most sensitive to skewness in a way that ensures the interval remains reliable even when the data is lopsided. The upper bound is further from the sample mean than the lower bound (observing BCa interval:  3.386498  5.928322) and the adjusted percentiles are due to the  bias correction step.
+
+
+</p>
+
+<p>
+**Final Recommendation**
+
+The BCa bootstrap confidence interval is the preferred method for this study. Soil lead data is not often distributed evenly; it is defined by outliers and positive constraints. While the asymptotic method is simpler to calculate, it tends to provide an overly optimistic or narrow view of the upper limits of contamination and results in under-covering the distribution.
+
+The BCa method provides the most rigorous correction for the natural skewness of environmental samples. This ensures a more realistic and conservative estimate of lead levels, which is necessary for making informed safety decisions regarding urban agriculture. 
+</p>
+
+
+```{r}
+library(boot)
+
+#  Wrapper 
+calc_ci <- function(data, method = "percentile", alpha = 0.05, B = 5000) {
+  n <- length(data)
+  theta_hat <- mean(data)
+  
+  # 1. Asymptotic (CLT)
+  if (method == "asymptotic") {
+    se <- sd(data) / sqrt(n)
+    z_val <- qnorm(1 - alpha/2)
+    return(c(lower = theta_hat - z_val * se, upper = theta_hat + z_val * se))
+  }
+  
+  # Bootstrap Distribution
+  set.seed(123)
+  boot_dist <- replicate(B, mean(sample(data, replace = TRUE)))
+  
+  # 2. Percentile
+  if (method == "percentile") {
+    return(quantile(boot_dist, probs = c(alpha/2, 1 - alpha/2)))
+  }
+  
+  # 3. BCa (Bias-Corrected and Accelerated)
+  if (method == "bca") {
+    # Bias correction 
+    prop_less <- sum(boot_dist < theta_hat) / B
+    z0 <- qnorm(prop_less)
+    
+    # acceleration (a_hat) using Jackknife
+  
+    jack_vals <- numeric(n)
+    for (i in 1:n) {
+      jack_vals[i] <- mean(data[-i])
+    }
+    
+    theta_jack_mean <- mean(jack_vals)
+    
+    # BCa formula components
+    numerator <- sum((theta_jack_mean - jack_vals)^3)
+    denominator <- sum((theta_jack_mean - jack_vals)^2)
+    a_hat <- numerator / (6 * (denominator^1.5))
+    
+    # Adjusted percentiles
+    z_alpha <- qnorm(alpha/2)
+    z_1alpha <- qnorm(1 - alpha/2)
+    
+    alpha1 <- pnorm(z0 + (z0 + z_alpha) / (1 - a_hat * (z0 + z_alpha)))
+    alpha2 <- pnorm(z0 + (z0 + z_1alpha) / (1 - a_hat * (z0 + z_1alpha)))
+    
+    return(quantile(sort(boot_dist), probs = c(alpha1, alpha2)))
+  }
+}
+
+
+```
+
+```{r}
+#Check: 
+
+library(boot)
+
+
+mean_stat <- function(data, indices) {
+  sample_data <- data[indices]
+  return(mean(sample_data))
+}
+
+#boot object (5000 replicates)
+set.seed(123)
+boot_out <- boot(data = pb_data, statistic = mean_stat, R = 5000)
+
+# functions vs library
+cat("--- TESTING ASYMPTOTIC ---\n")
+print(calc_ci(pb_data, method = "asymptotic"))
+# Manual CLT Check
+n <- length(pb_data)
+mean_val <- mean(pb_data)
+se_val <- sd(pb_data) / sqrt(n)
+error_margin <- qnorm(0.975) * se_val
+
+
+cat("Manual CLT Interval:", mean_val - error_margin, "to", mean_val + error_margin)
+
+cat("\n--- TESTING PERCENTILE ---\n")
+custom_perc <- calc_ci(pb_data, method = "percentile")
+package_perc <- boot.ci(boot_out, type = "perc")
+print(custom_perc)
+print(package_perc$percent[4:5]) #lower/upper bounds
+
+cat("\n--- TESTING BCa ---\n")
+custom_bca <- calc_ci(pb_data, method = "bca")
+package_bca <- boot.ci(boot_out, type = "bca")
+print(custom_bca)
+print(package_bca$bca[4:5])
+
+```
