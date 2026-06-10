@@ -1,0 +1,638 @@
+---
+title: "Data Storytelling Project: [Your Project Title]"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: yes
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: yes
+    theme: lumen
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    number_sections: yes
+    fig_width: 3
+    fig_height: 3
+  word_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    keep_md: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{css, echo = FALSE}
+#TOC::before {
+  content: "Table of Contents";
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  color: navy;
+  margin-bottom: 10px;
+}
+
+
+div#TOC li {     /* table of content  */
+    list-style:upper-roman;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+}
+
+h1.title {    /* level 1 header of title  */
+  font-size: 22px;
+  font-weight: bold;
+  color: DarkRed;
+  text-align: center;
+  font-family: "Gill Sans", sans-serif;
+}
+
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 15px;
+  font-weight: bold;
+  font-family: system-ui;
+  color: navy;
+  text-align: center;
+}
+
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  font-weight: bold;
+  font-family: "Gill Sans", sans-serif;
+  color: DarkBlue;
+  text-align: center;
+}
+
+h1 { /* Header 1 - and the author and data headers use this too  */
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: center;
+}
+
+h2 { /* Header 2 - and the author and data headers use this too  */
+    font-size: 18px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { /* Header 3 - and the author and data headers use this too  */
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h4 { /* Header 4 - and the author and data headers use this too  */
+    font-size: 14px;
+  font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+/* Add dots after numbered headers */
+.header-section-number::after {
+  content: ".";
+
+body { background-color:white; }
+
+.highlightme { background-color:yellow; }
+
+p { background-color:white; }
+
+}
+```
+```{r setup, include=FALSE}
+# Load required libraries
+library(tidyverse)  # For data manipulation and visualization
+library(ggplot2)    # For advanced plotting
+library(naniar)     # For missing data visualization
+library(skimr)      # For compact data summaries
+library(GGally)     # For parallel coordinate plots and scatterplot matrices
+library(plotly)     # For interactive visualizations
+library(DT)         # For interactive tables
+
+# Global chunk options
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  fig.align = "center"
+)
+
+# Custom theme for consistent visual design
+theme_storytelling <- theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", margin = margin(b = 10)),
+    plot.subtitle = element_text(size = 12, color = "grey40"),
+    axis.title = element_text(size = 11),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom",
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(20, 20, 20, 20)
+  )
+```
+
+# Introduction and Motivation
+
+Know Your Data and Practical Questions
+
+## Background Story and Data Generation Process
+
+How the data was collected:
+This data set was found on Kaggle.com. The target population consists of New York home prices, providing valuable statistics about a prime regional housing market. 
+
+The data set consists of 4802 observations. Further inspection of the data set revealed that missing values were imputed with mean values. The data set with 4802 observations was trimmed to remove observations with imputed values for square footage and number of bathrooms. A total of3004 valid records were obtained. 
+
+
+**Data Dictionary**
+
+Population: [Define the target population, sampling frame, and any inclusion/exclusion criteria]
+
+```{r}
+# Create an interactive data dictionary
+data_dictionary <- tribble(
+  ~Variable_Name,    ~Description,                                                        ~Variable_Type,
+  "[BROKERTITLE]",          "[Title of the broker]",       "[Categorical]",
+  "[TYPE]",          "[Type of the house]",  "[Categorical]",
+  "[PRICE]",          "[ Price of the house]",              "[Numeric]",
+  "[BEDS]",          "[Number of bedrooms]",  "[Numeric]",
+"[BATH]",          "[Number of bathrooms]",       "[Numeric]",
+  "[PROPERTYSQFT]",          "[ Square footage of the property
+]",  "[Numeric]",
+  "[LOCALITY]",          "[Locality information]",              "[Categorical]",
+  "[SUBLOCALITY]",          "[Sublocality information]",              "[Categorical]",
+  "[LATITUDE]",          "[Latitude coordinate of the house]",       "[Numeric]",
+  "[LONGITUDE]",          "[Longitude coordinate of the house]",  "[Numeric]"
+)
+
+datatable(
+  data_dictionary,
+  caption = "Table 1: Variable definitions and types for the analysis dataset",
+  rownames = FALSE,
+  options = list(pageLength = 10, dom = 'tip')
+)
+```
+
+
+## Business Questions and Hypotheses
+
+The purpose of collecting this dataset was to answer the following practical business questions:
+
+**Business Question 1**: Which New York sublocalities have the highest home prices?
+
+**Business Question 2**: Does location matter more than the square footage of a home for its list price?
+
+**Business Question 3**: How does the average home price vary across different types of homes?
+
+Hypotheses derived from domain knowledge:
+
+**H1**: Location is the most important predictor of housing prices in New York.
+
+**H2**: There is a positive, linear relationship between housing price and the number of bedrooms in a home. 
+
+**H3**: House price will differ based on the house type - for example, co-ops should have lower prices on average. 
+
+These hypotheses will guide our exploratory visual analysis and help us focus the narrative.
+
+
+# Visual Exploratory Analytic Plan (What to Visualize)
+
+**Narrative of the plan**: Before building any predictive models or dashboards, we must thoroughly understand the structure, quality, and underlying patterns in the data. 
+
+The following visual exploratory data analysis (V-EDA) plan is designed to systematically examine each variable, uncover hidden relationships, and validate — or challenge — our initial assumptions. 
+The plan is organized into three logical phases: (1) a high-level inspection for data integrity and missingness, (2) univariate profiling of individual variables to understand their distributions, and (3) bivariate and multivariate analyses to explore relationships central to our business questions.
+
+## Overall Data Inspection — Missing Values and Data Quality
+
+**Goal**: 
+
+* Assess the completeness and overall health of the dataset before diving into analysis.
+
+* Visualize the missing data pattern using an aggregated heatmap or upset plot.
+
+* Examine the proportion of missing values per variable and identify any systematic missingness patterns.
+
+* Check for potential data entry errors (e.g., implausible age values, negative amounts).
+
+
+## Variable Inspections — Distribution Analysis
+
+**Goal**: Understand the central tendency, spread, and shape of each variable individually.
+
+* **Numeric variables**: Histograms with overlaid density curves, supplemented by boxplots to detect outliers.
+
+* **Categorical variables**: Bar charts ordered by frequency, supplemented by proportional displays (waffle or treemap alternatives if needed).
+
+* **Date/time variables**: Time series trend plots to understand temporal patterns (if applicable).
+
+
+## Relationships Between Variables
+
+**Goal**: Investigate the associations and interactions that underpin our business questions.
+
+* **Numerical vs. Numerical**: Scatterplots with local regression (LOESS) smoothers to detect linear/non-linear trends. Correlation matrices with hierarchical clustering.
+
+* **Categorical vs. Categorical**: Grouped and stacked bar charts to compare proportions. Mosaic plots for complex contingency tables.
+
+* **Numerical vs. Categorical**: Side-by-side boxplots, violin plots, and ridge density plots to compare distributions across categories.
+
+
+# Effective Visual Design 
+
+(How to Visualize)
+
+## Section: Data Quality and Missing Value Assessment
+
+### Missing Data Pattern
+
+**Opening paragraph**: "Before interpreting any patterns in the data, we must first address the question of missingness. Gaps in the data can introduce bias and undermine the validity of our conclusions if not properly understood. This visualization maps the locations and proportions of missing values across all variables, allowing us to determine whether missing data occurs completely at random (MCAR), at random (MAR), or not at random (MNAR) by observing any clustering in the pattern."
+
+
+```{r}
+library(tidyverse)
+df <- readr::read_csv("NY-House-Dataset.csv")
+# Proportion missing by variable
+missing_summary <- df %>%
+  summarise(across(everything(), ~ mean(is.na(.)) * 100)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "pct_missing") %>%
+  arrange(desc(pct_missing))
+
+ggplot(missing_summary, aes(x = reorder(variable, pct_missing), y = pct_missing)) +
+  geom_col(fill = "steelblue", alpha = 0.8) +
+  geom_text(aes(label = paste0(round(pct_missing, 1), "%")), hjust = -0.1, size = 3.5) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, max(missing_summary$pct_missing) * 1.2)) +
+  labs(
+    title = "Proportion of Missing Values by Variable",
+    subtitle = "Variables with high missingness rates may require imputation or exclusion",
+    x = NULL,
+    y = "Percentage Missing (%)"
+  ) 
+```
+
+
+**Summary of Observations and Implications**: "Only four variables have missing values. feature_adoption_score has the highest missingness (16.4%), while support_tickets (3.8%), login_frequency (2.8%), and satisfaction_rating (2.2%) show minimal gaps. All other variables, including churned, are 0% missing.
+
+Since missingness is low and concentrated in one variable, we should:
+
+* Impute feature_adoption_score (e.g., median or model-based) to retain sample size, or
+
+* Add a missing indicator to capture any signal from the absence itself.
+
+Given the low rates, dropping incomplete cases is unlikely to harm analysis significantly, but imputation is preferred to avoid unnecessary data loss."
+
+## Univariate Distribution Analysis
+
+### Distributions of Key Numeric Variables
+
+**Opening paragraph**: In order to detect skewness, multimodality, or extreme outliers in the numerical variables, univariate distribution analysis was performed using histogram construction. Histograms are combined with density estimates to show both the frequency and probability density. 
+
+
+```{r fig.align='center', fig.height=6, fig.width=7}
+library(tidyverse)
+
+# 1. Clean up extreme outliers first
+df_cleaned <- df %>%
+  filter(
+    PRICE < 5000000,          # Caps price at $5M (adjust based on your dataset)
+    PROPERTYSQFT < 10000,     # Caps sqft at 10,000
+    BEDS <= 10,               # Limits beds to reasonable residential numbers
+    BATH <= 10                # Limits baths
+  )
+
+# 2. Reshape to long format
+df_numeric_long <- df_cleaned %>%
+  select(BATH, BEDS, LATITUDE, LONGITUDE, PRICE, PROPERTYSQFT) %>% # explicitly grab numeric variables
+  pivot_longer(everything(), names_to = "variable", values_to = "value")
+
+# 3. Plot with fixed data
+ggplot(df_numeric_long, aes(x = value)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "skyblue", alpha = 0.6, color = "white") +
+  geom_density(color = "darkblue", linewidth = 1) +
+  # Simplified mean/median lines using a pre-calculated data frame to keep it clean
+  geom_vline(data = df_numeric_long %>% 
+               group_by(variable) %>% 
+               summarise(mean = mean(value, na.rm = TRUE)),
+             aes(xintercept = mean), linetype = "dashed", color = "red", linewidth = 0.8) +
+  geom_vline(data = df_numeric_long %>% 
+               group_by(variable) %>% 
+               summarise(median = median(value, na.rm = TRUE)),
+             aes(xintercept = median), linetype = "solid", color = "darkgreen", linewidth = 0.8) +
+  facet_wrap(~ variable, scales = "free", ncol = 2) +
+  labs(
+    title = "Univariate Profiles: Distribution of Numeric Variables (Outliers Removed)",
+    subtitle = "Red dashed line = Mean; Green solid line = Median",
+    x = NULL, y = "Density"
+  ) +
+  theme_minimal()
+```
+
+
+**Summary of Observations and Implications**: An examination of the univariate distributions reveals several important patterns. Variables such as price and propertysqft show significantly right-skewed distributions, indicating that while most users have low values, a small minority drive extremely high counts or long tenures. In contrast, feature_adoption_score and satisfaction_rating are more evenly spread, with satisfaction ratings clustering toward the upper range of 3 to 5. Notably, the target variable churned appears well-balanced between zero and one, providing a solid foundation for classification modeling.
+
+These distributional characteristics carry direct implications for model development. For linear models such as logistic regression, a log or Box-Cox transformation is advisable for the right-skewed variables to reduce skewness and meet normality assumptions. Tree-based models like Random Forest or XGBoost, however, can handle these patterns natively without transformation. If distance-based algorithms such as k-NN or SVM are used, capping outliers or binning extreme values in support_tickets and tenure_days would be prudent. Finally, the unusual shape of var1 suggests the presence of two distinct subgroups within the data, warranting further bivariate exploration—especially in relation to churn status."
+
+
+### Distributions of Categorical Variables
+
+**Opening paragraph**: "Categorical variables define the segments and groups that underpin our business questions. A simple frequency breakdown not only reveals the balance — or imbalance — among classes but also surfaces any categories with insufficient data to support reliable inference. Ordered bar charts provide an immediate visual ranking of the most common categories."
+
+
+```{r fig.align='center', fig.height=7, fig.width=5}
+# Create df3 with factor columns
+df3 <- data.frame(
+  department = factor(sample(c("Sales", "Marketing", "Engineering", "HR", "Finance"), 
+                             size = 200, replace = TRUE, 
+                             prob = c(0.3, 0.25, 0.2, 0.15, 0.1))),
+  
+  satisfaction = factor(sample(c("Very Satisfied", "Satisfied", "Neutral", "Dissatisfied", "Very Dissatisfied"),
+                               size = 200, replace = TRUE,
+                               prob = c(0.2, 0.35, 0.25, 0.12, 0.08))),
+  
+  education_level = factor(sample(c("High School", "Bachelor's", "Master's", "PhD"),
+                                  size = 200, replace = TRUE,
+                                  prob = c(0.25, 0.45, 0.2, 0.1))),
+  
+  customer_type = factor(sample(c("New", "Regular", "Premium", "Inactive"),
+                                size = 200, replace = TRUE,
+                                prob = c(0.3, 0.4, 0.2, 0.1))),
+  
+  region = factor(sample(c("North", "South", "East", "West", "Central"),
+                         size = 200, replace = TRUE,
+                         prob = c(0.25, 0.2, 0.25, 0.2, 0.1))),
+  
+  stringsAsFactors = TRUE
+)
+
+# Optional: Create an imbalanced factor to demonstrate the subtitle's point
+df3$product_category <- factor(sample(c("Electronics", "Clothing", "Books", "Other"),
+                                      size = 200, replace = TRUE,
+                                      prob = c(0.7, 0.15, 0.1, 0.05)))
+```
+
+
+
+```{r fig.align='center', fig.height=7, fig.width=8}
+# variables and plot bar charts
+df_cat_long <- df3 %>%
+  select(where(is.factor)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "category")
+
+ggplot(df_cat_long, aes(y = fct_rev(fct_infreq(category)))) +
+  geom_bar(fill = "coral", alpha = 0.8, width = 0.7) +
+  geom_text(stat = "count", aes(label = after_stat(count)), hjust = -0.2, size = 3.5) +
+  facet_wrap(~ variable, scales = "free_y", ncol = 1) +
+  labs(
+    title = "Categorical Variable Frequency Counts",
+    subtitle = "Counts shown at bar ends. Highly imbalanced categories \n may need to be collapsed.",
+    x = "Number of Observations",
+    y = NULL
+  ) +
+  theme_storytelling
+```
+
+
+**Summary of Observations and Implications**: "Several categorical variables show notable class imbalances. product_category is heavily skewed, with "Electronics" accounting for 136 out of 200 observations, while "Books" appears only 9 times. Similarly, customer_type, department, education_level, and satisfaction each have dominant categories (e.g., "Regular" at 77, "Sales" at 62, "Bachelor's" at 82, "Satisfied" at 65) and rare ones (e.g., "Inactive" at 19, "Finance" at 19, "PhD" at 26, "Very Dissatisfied" at 16). Only region appears relatively balanced.
+
+For modeling, rare categories with fewer than 20 observations should be collapsed into an "Other" group to avoid sparse cells and unstable estimates. Given the extreme skew in product_category, resampling techniques (e.g., SMOTE) or class-weighted algorithms may be necessary to prevent majority-class bias, especially if these variables relate strongly to the target churned."
+
+
+
+## Relationships Between Variables
+
+### Correlation and Trend Discovery
+
+**Opening paragraph**: "The interplay between numeric variables is the engine of many predictive models. A scatterplot matrix augmented with correlation coefficients and LOESS trend lines allows us to quickly gauge the strength and direction of linear associations, detect potential multicollinearity, and uncover non-linear patterns that simple correlations might obscure."
+
+
+```{r}
+# Create df4 with numeric columns for correlation analysis
+set.seed(42)  # For reproducible results
+
+df4 <- data.frame(
+  # Revenue-related variables
+  revenue = rnorm(200, mean = 50000, sd = 15000),
+  marketing_spend = rnorm(200, mean = 10000, sd = 3000),
+  customer_count = rpois(200, lambda = 500),
+  
+  # Customer metrics
+  customer_satisfaction = runif(200, min = 1, max = 10),
+  retention_rate = rbeta(200, shape1 = 8, shape2 = 2) * 100,
+  
+  # Operational metrics
+  response_time = rgamma(200, shape = 2, rate = 0.5),
+  employee_hours = rnorm(200, mean = 160, sd = 30),
+  
+  # Financial ratios
+  profit_margin = rbeta(200, shape1 = 5, shape2 = 5) * 100,
+  unit_cost = rnorm(200, mean = 25, sd = 8),
+  inventory_turnover = rnorm(200, mean = 6, sd = 2)
+)
+
+# Add some correlations to make relationships interesting
+# Revenue is positively correlated with marketing spend
+df4$revenue <- df4$revenue + df4$marketing_spend * 0.5 + rnorm(200, 0, 5000)
+
+# Customer satisfaction positively affects retention rate
+df4$retention_rate <- df4$retention_rate + df4$customer_satisfaction * 1.5 + rnorm(200, 0, 5)
+
+# Response time negatively affects customer satisfaction
+df4$customer_satisfaction <- df4$customer_satisfaction - df4$response_time * 0.1 + rnorm(200, 0, 0.5)
+
+# Profit margin relates to unit cost and revenue
+df4$profit_margin <- 30 - (df4$unit_cost * 0.3) + (df4$revenue / 50000) * 5 + rnorm(200, 0, 3)
+
+# Ensure values are reasonable (no negatives where inappropriate)
+df4$revenue <- pmax(df4$revenue, 10000)
+df4$marketing_spend <- pmax(df4$marketing_spend, 1000)
+df4$customer_count <- pmax(df4$customer_count, 50)
+df4$customer_satisfaction <- pmin(pmax(df4$customer_satisfaction, 1), 10)
+df4$retention_rate <- pmin(pmax(df4$retention_rate, 0), 100)
+df4$profit_margin <- pmin(pmax(df4$profit_margin, 0), 100)
+
+# Round for readability
+df4$revenue <- round(df4$revenue, 0)
+df4$marketing_spend <- round(df4$marketing_spend, 0)
+df4$unit_cost <- round(df4$unit_cost, 1)
+df4$inventory_turnover <- round(df4$inventory_turnover, 1)
+```
+
+```{r fig.align='center', fig.width=8, fig.height=6}
+# Select relevant numeric variables and create a scatterplot matrix
+df4 %>%
+  select(where(is.numeric)) %>%
+  select(1:5) %>%  # Limit to first 5 numeric variables for clarity; adjust as needed
+  ggpairs(
+    lower = list(continuous = wrap("smooth", method = "loess", se = TRUE, alpha = 0.3, color = "steelblue")),
+    diag = list(continuous = wrap("barDiag", fill = "skyblue", alpha = 0.6)),
+    upper = list(continuous = wrap("cor", size = 4, color = "darkred"))
+  ) +
+  labs(
+    title = "Numeric Variable Relationships:\n Correlation Matrix with LOESS Smoothers",
+    subtitle = "Lower panel: Trends with 95% confidence bands. Upper panel: Pearson correlation coefficients."
+  ) +
+  theme_storytelling
+```
+
+
+**Summary of Observations and Implications**: "The pairwise plot reveals that most numeric variables exhibit very weak or near-zero linear correlations. For instance, revenue shows minimal correlation with marketing_spend (0.037), customer_count (-0.008), customer_satisfaction (-0.028), and retention_rate (0.058). Similarly, marketing_spend and customer_satisfaction are nearly uncorrelated (0.052). The only noticeable relationships involve customer_count with customer_satisfaction (-0.197) and with retention_rate (-0.237*), suggesting that higher customer counts are modestly associated with lower satisfaction and retention.
+
+These weak correlations imply that multicollinearity is unlikely to be a concern for linear models. However, the LOESS smoothers should be examined carefully for non-linear patterns that Pearson coefficients may obscure. If any smoother reveals curvature (e.g., a plateau or threshold effect), a generalized additive model (GAM) or piecewise regression would be more appropriate than standard linear regression. Additionally, any fanning or funnel-shaped pattern in the scatterplots would indicate heteroscedasticity, warranting robust standard errors or variance-stabilizing transformations."
+
+### Comparing Distributions Across Groups - Use Interactive Leaflet Plot
+
+**Opening paragraph**: "To answer questions about group differences — such as whether spending behavior differs by region — we visually compare the entire distribution of the numerical outcome across each categorical level. Violin plots combine a mirrored density curve with an embedded boxplot, providing a rich summary of location, spread, and shape for each group, far surpassing the information conveyed by a simple bar chart of means."
+
+```{r}
+region_spending <- data.frame(
+  region = c(
+    rep("North", 30),
+    rep("South", 30),
+    rep("East", 30),
+    rep("West", 30)
+  ),
+  spending_usd = c(
+    # North: 45, 48, 50, 52, 55, 57, 58, 60, 61, 63, 64, 65, 66, 67, 68,
+    #        69, 70, 72, 73, 75, 76, 78, 80, 82, 85, 88, 92, 95, 100, 110
+    45, 48, 50, 52, 55, 57, 58, 60, 61, 63, 64, 65, 66, 67, 68,
+    69, 70, 72, 73, 75, 76, 78, 80, 82, 85, 88, 92, 95, 100, 110,
+    
+    # South: Evenly spread from 30 to 110
+    30, 35, 38, 40, 42, 45, 48, 50, 52, 55, 58, 60, 62, 65, 67,
+    70, 72, 75, 78, 80, 82, 85, 88, 90, 92, 95, 98, 100, 105, 110,
+    
+    # East: Tight cluster around high spending
+    82, 84, 85, 86, 87, 88, 89, 90, 90, 91, 92, 92, 93, 94, 95,
+    95, 96, 97, 98, 98, 99, 100, 100, 101, 102, 103, 105, 107, 108, 110,
+    
+    # West: Bimodal - low spenders and high spenders
+    28, 30, 32, 34, 35, 36, 38, 39, 40, 42, 43, 45, 46, 48, 50,  # low cluster
+    110, 115, 118, 120, 122, 125, 128, 130, 132, 135, 138, 140, 142, 145, 150  # high cluster
+  )
+)
+
+```
+
+
+```{r fig.align='center'}
+ggplot(region_spending, aes(x = region, y = spending_usd, fill = region)) +
+  geom_violin(trim = FALSE, alpha = 0.7) +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.8) +
+  labs(title = "Distribution of Monthly Spending by Region",
+       y = "Spending (USD)", x = "Region") +
+  theme_minimal()
+```
+
+**Summary of Observations and Implications**: "The violin plot shows distinct monthly spending distributions across regions. The East region is relatively narrow and consistent, while the North and West regions display wider spreads with multiple peaks, indicating subpopulations of spenders. The South region is skewed toward lower spending with a long tail.
+
+For modeling, region should be treated as a meaningful categorical predictor. The multimodality in North and West suggests that a single average value is insufficient—cluster analysis within those regions may reveal distinct customer segments. Spending may require transformation to address skewness, particularly in the South. These patterns also support region-specific marketing or retention strategies."
+
+### Contingency and Association
+
+**Opening paragraph**: "When both variables are categorical, understanding the pattern of co-occurrence is key. A normalized grouped bar chart helps compare conditional proportions, revealing whether the distribution of one variable shifts meaningfully across the levels of the other. This is essential for identifying interaction effects that can be encoded in models or decision trees."
+
+```{r}
+# Sample data
+df5 <- data.frame(
+  region = rep(c("North", "South", "East", "West"), each = 150),
+  product = sample(c("Product A", "Product B", "Product C"), 600, 
+                   prob = c(0.5, 0.3, 0.2), replace = TRUE)
+)
+
+
+# Run the visualization
+
+# Using your custom theme
+theme_storytelling <- theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", margin = margin(b = 10)),
+    plot.subtitle = element_text(size = 12, color = "grey40"),
+    axis.title = element_text(size = 11),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom",
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(20, 20, 20, 20)
+  )
+
+# Best visualization for two categorical variables
+ggplot(df5, aes(x = region, fill = product)) +
+  geom_bar(position = "fill", alpha = 0.85) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_viridis_d(option = "D", name = "Product Type") +
+  labs(
+    title = "Product Distribution Across Regions",
+    subtitle = "Shows the proportion of products within each region",
+    x = "Geographic Region",
+    y = "Proportion of Total"
+  ) +
+  theme_storytelling
+```
+
+**Summary of Observations and Implications**: "The cross-tabulation reveals that the distribution of product types is perfectly uniform across all regions. For Product A, each region accounts for exactly 22% of sales. Similarly, Product B and Product C each hold a constant 17% share in every region—East, North, South, and West alike.
+
+This complete absence of variation implies that product preference does not differ by geographic location. For modeling purposes, region is unlikely to be a meaningful predictor of product choice, nor will product type interact with region to explain differences in outcomes such as spending or churn. Consequently, analysts can safely exclude the region–product interaction term from models without fear of losing explanatory power, and marketing efforts need not be customized by product type across regions. Instead, resources should be directed toward other variables that show stronger associations with customer behavior."
+
+
+
+# Effective Visual Storytelling: From Insights to Action
+
+**Opening paragraph**: "The preceding visual explorations were not merely an academic exercise in chart construction; they were a systematic investigation designed to extract actionable intelligence from raw data. In this concluding section, we synthesize our visual findings into a coherent narrative and outline concrete steps for turning insight into impact."
+
+## How to Use Visual Insights to Support Business Decisions
+
+The visual evidence we have gathered directly informs several high-priority business decisions:
+
+**Decision on [Topic 1 — e.g., Customer Retention Strategy]**: Our analysis (Figure 5) revealed that [Group A] exhibits significantly higher churn risk. Recommendation: Deploy a targeted retention campaign within this segment, offering personalized incentives that address the specific pain points identified in their behavioral profile. The expected uplift from this focused approach is projected to reduce churn by [X]% based on historical patterns.
+
+**Decision on [Topic 2 — e.g., Resource Allocation]**: The bimodal distribution discovered in [Variable B] (Figure 2) demonstrates that our user base is not monolithic. Recommendation: Restructure the customer support team to create specialized pods — one for each of the two user modes — ensuring that the high-volume, low-complexity segment and the low-volume, high-complexity segment each receive appropriately trained support.
+
+**Decision on [Topic 3 — e.g., Product Prioritization]**: The strong, plateauing relationship between [Variable X] and [Variable Y] (Figure 4) indicates diminishing returns after a certain threshold. Recommendation: Shift engineering resources away from pushing users beyond this saturation point and instead focus on improving the onboarding flow to help more users reach the initial plateau.
+
+## How to Use Visual Findings to Inform Subsequent Data Analysis and Modeling
+
+The visual EDA has laid a robust foundation for the next phase of the data science lifecycle:
+
+**Feature Engineering**: The non-linearity in the [X-Y] relationship suggests creating a transformed feature (e.g., log(X) or a spline basis expansion) will improve model performance.
+
+**Model Selection**: The presence of heteroscedasticity and outliers favors tree-based ensemble methods (Random Forest, XGBoost) or robust regression over vanilla linear regression for our initial baseline models.
+
+**Handling Missing Data**: Based on the observed missing data mechanism (Section 3.1), we will implement multiple imputation by chained equations (MICE) rather than simple mean imputation, preserving the uncertainty inherent in the missing values.
+
+**Hypothesis Validation**: The visual evidence provides preliminary support for H2 and H3. Our confirmatory analysis will now proceed with formal statistical tests (e.g., Mann-Whitney U for the distributional difference in Figure 5, and a Chi-squared test of independence for Figure 6) to validate these observations at a predetermined significance level.
+
+## Dashboard and Real-Time Monitoring Implementation
+If this project is intended for a production dashboard, here is the blueprint for implementation:
+
+The layout of the dashboard should mirror the storytelling narrative we've constructed, organized in three logical tabs:
+
+**Tab 1: "Health Monitor"** — Embedding the missing data visualization (Figure 1) as an automated data quality check. Refreshed daily, it will trigger alerts if the proportion of missing values for any critical field exceeds a 5% threshold, enabling proactive data engineering intervention.
+
+**Tab 2: "Segment Deep-Dive"** — Featuring the violin plot (Figure 5) and scatterplot matrix (Figure 4) rendered as interactive Plotly objects. Users will be able to brush over outlier points to drill down to the individual record level and filter segments dynamically, making it a real-time diagnostic tool for business analysts.
+
+**Tab 3: "Decision Tracker"** — Displaying the before-and-after distributions for metrics tied to the business decisions outlined in Section 4.1. This explicitly links the dashboard to the strategic actions it is intended to monitor, closing the loop from insight to execution.
+
+The backend pipeline will be orchestrated to run the R Markdown {targets} pipeline every [N] hours, writing updated datasets that feed a Shiny or Quarto dashboard deployed on Posit Connect for stakeholder access.
+
+
+
+This concludes the data storytelling project. The journey from raw, unstructured data to a clear, actionable narrative demonstrates that effective visualization is not just about making graphs — it is about making decisions.
+
+
